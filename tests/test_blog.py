@@ -37,6 +37,8 @@ def test_author_required(app, client, auth):
     # current user doesn't see edit link
     assert b'href="/1/update"' not in client.get('/').data
 
+#123
+
 @pytest.mark.parametrize('path', (
     '/2/update',
     '/2/delete',
