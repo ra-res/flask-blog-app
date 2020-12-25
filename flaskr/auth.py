@@ -7,6 +7,8 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from flaskr.db import get_db
 
+from string import ascii_letters, digits
+
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
@@ -22,6 +24,12 @@ def register():
             error = 'Username is required.'
         elif not password:
             error = 'Password is required.'
+        elif len(username) < 6:
+            error = 'Username must be at least 6 characters'
+        elif not set(password).difference(ascii_letters + digits):
+            error = 'Password must contain special characters'
+        elif not check_digit(password):
+            error = 'Password must contain a number'
         elif db.execute(
             'SELECT id FROM user WHERE username = ?', (username,)
         ).fetchone() is not None:
@@ -38,6 +46,10 @@ def register():
         flash(error)
 
     return render_template('auth/register.html')
+
+
+def check_digit(string):
+    return any(i.isdigit() for i in string)
 
 
 @bp.route('/login', methods=('GET', 'POST'))
@@ -59,11 +71,19 @@ def login():
         if error is None:
             session.clear()
             session['user_id'] = user['id']
+            session['messages'] = post_count()
             return redirect(url_for('index'))
-
         flash(error)
 
     return render_template('auth/login.html')
+
+
+def post_count():
+    db = get_db()
+    posts = db.execute(
+        'SELECT id FROM post WHERE author_id = (?)', (session['user_id'],)
+    ).fetchall()
+    return len(posts)
 
 
 @bp.before_app_request
@@ -82,6 +102,7 @@ def load_logged_in_user():
 def logout():
     session.clear()
     return redirect(url_for('index'))
+
 
 def login_required(view):
     @functools.wraps(view)

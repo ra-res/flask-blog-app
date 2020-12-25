@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, g, redirect, render_template, request, url_for, session
 )
 from werkzeug.exceptions import abort
 
@@ -41,6 +41,7 @@ def create():
                 (title, body, g.user['id'])
             )
             db.commit()
+            session['messages'] += 1
             return redirect(url_for('blog.index'))
 
     return render_template('blog/create.html')
@@ -98,4 +99,5 @@ def delete(id):
     db = get_db()
     db.execute('DELETE FROM post WHERE id = ?', (id,))
     db.commit()
+    session['messages'] -= 1
     return redirect(url_for('blog.index'))
