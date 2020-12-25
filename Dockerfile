@@ -1,10 +1,13 @@
-FROM ubuntu:latest
-RUN apt-get update -y
-RUN apt-get install -y python3-pip python-dev build-essential
-RUN pip3 install --upgrade pip
-COPY . /flaskr
-COPY requirements.txt requirements.txt
+FROM python:3.7-alpine
 WORKDIR /flaskr
-RUN pip3 install -r requirements.txt
-ENTRYPOINT ["python"]
-CMD ["flaskr/__init__.py"]
+ENV FLASK_APP=flaskr:__init__.py
+ENV FLASK_ENV=development
+ENV FLASK_RUN_HOST=0.0.0.0
+RUN apk add --no-cache gcc musl-dev linux-headers
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+EXPOSE 5000
+COPY . .
+#CMD ["flask", "run"]
+CMD ["flask", "run", "--host", "0.0.0.0"]
+
